@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BITUMEN EXTRACTION TEST</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9f7',
+                            100: '#ccf2ea', 
+                            500: '#00685E',
+                            600: '#004d47',
+                            700: '#003d37'
+                        },
+                        secondary: {
+                            100: '#f5f7f6',
+                            300: '#8BAA99',
+                            500: '#6b8a79'
+                        },
+                        dark: '#101820',
+                        accent: {
+                            yellow: '#F2C75C',
+                            orange: '#E59256',
+                            red: '#A13525',
+                            blue: '#006797',
+                            teal: '#00A399',
+                            brown: '#B98346'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Amiri:wght@400;600;700&display=swap');
+        
+        .font-arabic {
+            font-family: 'Amiri', serif;
+        }
+        
+        .font-english {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        [dir="rtl"] {
+            text-align: right;
+        }
+        
+        [dir="ltr"] {
+            text-align: left;
+        }
+        
+        .print-container {
+            display: none;
+        }
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-container, .print-container * {
+                visibility: visible;
+            }
+            .print-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                display: block;
+            }
+            
+            @page {
+                size: A4 landscape;
+                margin: 1cm;
+            }
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #00685E 0%, #8BAA99 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <!-- Language Toggle & Header -->
+    <div class="gradient-bg text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold" data-ar="اختبار استخلاص البيتومين" data-en="BITUMEN EXTRACTION TEST">
+                        اختبار استخلاص البيتومين
+                    </h1>
+                    <p class="text-primary-100 mt-1" data-ar="نظام حساب نسبة البيتومين في الأسفلت" data-en="Asphalt Bitumen Content Calculation System">
+                        نظام حساب نسبة البيتومين في الأسفلت
+                    </p>
+                </div>
+                <button id="langToggle" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
+                    <span data-ar="English" data-en="العربية">English</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Project Information Form -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-primary-500 mb-6" data-ar="معلومات المشروع" data-en="Project Information">
+                معلومات المشروع
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" data-ar="اسم المشروع" data-en="Project Name">
+                        اسم المشروع
+                    </label>
+                    <input type="text" id="projectName" class="w-full text-base px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" data-ar="اسم المقاول" data-en="Contractor Name">
+                        اسم المقاول
+                    </label>
+                    <input type="text" id="contractorName" class="w-full text-base px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" data-ar="نوع الطبقة" data-en="Layer Type">
+                        نوع الطبقة
+                    </label>
+                    <select id="layerType" class="w-full text-base px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="B.W.C">B.W.C</option>
+                        <option value="B.B.C">B.B.C</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" data-ar="تاريخ الاختبار" data-en="Test Date">
+                        تاريخ الاختبار
+                    </label>
+                    <input type="date" id="testDate" class="w-full text-base px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" data-ar="الحد الأدنى للبيتومين %" data-en="Min Bitumen %">
+                        الحد الأدنى للبيتومين %
+                    </label>
+                    <input type="number" step="0.1" id="minBitumen" class="w-full text-base px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" data-ar="الحد الأعلى للبيتومين %" data-en="Max Bitumen %">
+                        الحد الأعلى للبيتومين %
+                    </label>
+                    <input type="number" step="0.1" id="maxBitumen" class="w-full text-base px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+            </div>
+        </div>
+
+        <!-- Sample Input Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-primary-500" data-ar="بيانات العينات" data-en="Sample Data">
+                    بيانات العينات
+                </h2>
+                <div class="flex gap-3">
+                    <button id="addSample" class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-lg transition-colors">
+                        <span data-ar="إضافة عينة" data-en="Add Sample">إضافة عينة</span>
+                    </button>
+                    <button id="clearAll" class="bg-accent-red hover:bg-red-600 text-white px-6 py-3 rounded-lg transition-colors">
+                        <span data-ar="مسح الكل" data-en="Clear All">مسح الكل</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="samplesContainer" class="space-y-6">
+                <!-- Sample forms will be added here -->
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-primary-500" data-ar="النتائج" data-en="Results">
+                    النتائج
+                </h2>
+                <div class="flex gap-3">
+                    <button id="calculateAll" class="bg-accent-teal hover:bg-teal-600 text-white px-6 py-3 rounded-lg transition-colors">
+                        <span data-ar="حساب النتائج" data-en="Calculate Results">حساب النتائج</span>
+                    </button>
+                    <button id="printResults" class="bg-accent-blue hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors">
+                        <span data-ar="طباعة" data-en="Print">طباعة</span>
+                    </button>
+                    <button id="exportExcel" class="bg-accent-yellow hover:bg-yellow-600 text-white px-6 py-3 rounded-lg transition-colors">
+                        <span data-ar="تصدير Excel" data-en="Export Excel">تصدير Excel</span>
+                    </button>
+                    <button id="exportPDF" class="bg-accent-orange hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors">
+                        <span data-ar="تصدير PDF" data-en="Export PDF">تصدير PDF</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="resultsTable" class="overflow-x-auto">
+                <!-- Results table will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Container -->
+    <div class="print-container">
+        <div id="printContent"></div>
+    </div>
+
+    <script>
+        // Language management
+        let currentLang = 'ar';
+        const translations = {
+            ar: {
+                direction: 'rtl',
+                font: 'font-arabic'
+            },
+            en: {
+                direction: 'ltr', 
+                font: 'font-english'
+            }
+        };
+
+        // Sample data storage
+        let samples = [];
+        let sampleCounter = 0;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date
+            document.getElementById('testDate').value = new Date().toISOString().split('T')[0];
+            
+            // Add first sample
+            addSample();
+            
+            // Setup dark mode detection
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                if (event.matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            });
+        });
+
+        // Language toggle functionality
+        document.getElementById('langToggle').addEventListener('click', function() {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            updateLanguage();
+        });
+
+        function updateLanguage() {
+            const html = document.documentElement;
+            const body = document.body;
+            
+            // Update direction and font
+            html.dir = translations[currentLang].direction;
+            html.lang = currentLang;
+            body.className = body.className.replace(/font-(arabic|english)/, translations[currentLang].font);
+            body.classList.add(translations[currentLang].font);
+            
+            // Update text content
+            document.querySelectorAll('[data-ar][data-en]').forEach(element => {
+                element.textContent = element.getAttribute(`data-${currentLang}`);
+            });
+            
+            // Update placeholders
+            document.querySelectorAll('[data-placeholder-ar][data-placeholder-en]').forEach(element => {
+                element.placeholder = element.getAttribute(`data-placeholder-${currentLang}`);
+            });
+        }
+
+        // Sample management
+        function addSample() {
+            if (sampleCounter >= 50) {
+                showAlert(currentLang === 'ar' ? 'لا يمكن إضافة أكثر من 50 عينة' : 'Cannot add more than 50 samples');
+                return;
+            }
+
+            sampleCounter++;
+            const sampleDiv = document.createElement('div');
+            sampleDiv.className = 'border-2 border-dashed border-primary-300 rounded-lg p-6 bg-primary-50/50';
+            sampleDiv.id = `sample-${sampleCounter}`;
+            
+            sampleDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-primary-600" data-ar="العينة ${sampleCounter}" data-en="Sample ${sampleCounter}">
+                        العينة ${sampleCounter}
+                    </h3>
+                    <button onclick="removeSample(${sampleCounter})" class="text-accent-red hover:text-red-700 p-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-ar="اسم العينة" data-en="Sample Name">
+                            اسم العينة
+                        </label>
+                        <input type="text" name="sampleName" placeholder="" class="w-full text-base px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white" data-placeholder-ar="أدخل اسم العينة" data-placeholder-en="Enter sample name">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-ar="وزن العينة قبل الاختبار (جرام)" data-en="Sample Weight Before Test (g)">
+                            وزن العينة قبل الاختبار (جرام)
+                        </label>
+                        <input type="number" step="0.01" name="weightBefore" class="w-full text-base px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-ar="وزن الفلتر قبل الاختبار (جرام)" data-en="Filter Weight Before Test (g)">
+                            وزن الفلتر قبل الاختبار (جرام)
+                        </label>
+                        <input type="number" step="0.01" name="filterBefore" class="w-full text-base px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-ar="وزن العينة بعد الاختبار (جافة) (جرام)" data-en="Sample Weight After Test (Dry) (g)">
+                            وزن العينة بعد الاختبار (جافة) (جرام)
+                        </label>
+                        <input type="number" step="0.01" name="weightAfter" class="w-full text-base px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-ar="وزن الفلتر بعد الاختبار (جافة) (جرام)" data-en="Filter Weight After Test (Dry) (g)">
+                            وزن الفلتر بعد الاختبار (جافة) (جرام)
+                        </label>
+                        <input type="number" step="0.01" name="filterAfter" class="w-full text-base px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('samplesContainer').appendChild(sampleDiv);
+            updateLanguage();
+        }
+
+        function removeSample(id) {
+            const sampleDiv = document.getElementById(`sample-${id}`);
+            if (sampleDiv) {
+                sampleDiv.remove();
+            }
+        }
+
+        function clearAllSamples() {
+            showConfirmDialog(
+                currentLang === 'ar' ? 'هل أنت متأكد من حذف جميع العينات؟' : 'Are you sure you want to delete all samples?',
+                function() {
+                    document.getElementById('samplesContainer').innerHTML = '';
+                    sampleCounter = 0;
+                    samples = [];
+                    addSample();
+                }
+            );
+        }
+
+        // Calculate results
+        function calculateResults() {
+            const samplesContainer = document.getElementById('samplesContainer');
+            const sampleDivs = samplesContainer.querySelectorAll('[id^="sample-"]');
+            
+            samples = [];
+            
+            sampleDivs.forEach(sampleDiv => {
+                const inputs = sampleDiv.querySelectorAll('input');
+                const sampleData = {};
+                
+                inputs.forEach(input => {
+                    sampleData[input.name] = input.value;
+                });
+                
+                if (sampleData.weightBefore && sampleData.filterBefore && 
+                    sampleData.weightAfter && sampleData.filterAfter) {
+                    
+                    // Calculate fine soil weight on filter
+                    const fineSoilWeight = parseFloat(sampleData.filterAfter) - parseFloat(sampleData.filterBefore);
+                    
+                    // Calculate aggregate weight (وزن العينة للركام)
+                    const aggregateWeight = parseFloat(sampleData.weightAfter) + fineSoilWeight;
+                    
+                    // Calculate bitumen weight
+                    const bitumenWeight = parseFloat(sampleData.weightBefore) - aggregateWeight;
+                    
+                    // Calculate bitumen percentage
+                    const bitumenPercentage = (bitumenWeight / parseFloat(sampleData.weightBefore)) * 100;
+                    
+                    // Check if within acceptable range
+                    const minBitumen = parseFloat(document.getElementById('minBitumen').value) || 0;
+                    const maxBitumen = parseFloat(document.getElementById('maxBitumen').value) || 100;
+                    const isAcceptable = bitumenPercentage >= minBitumen && bitumenPercentage <= maxBitumen;
+                    
+                    samples.push({
+                        name: sampleData.sampleName || 'Unnamed Sample',
+                        weightBefore: parseFloat(sampleData.weightBefore),
+                        filterBefore: parseFloat(sampleData.filterBefore),
+                        weightAfter: parseFloat(sampleData.weightAfter),
+                        filterAfter: parseFloat(sampleData.filterAfter),
+                        fineSoilWeight: fineSoilWeight,
+                        aggregateWeight: aggregateWeight,
+                        bitumenWeight: bitumenWeight,
+                        bitumenPercentage: bitumenPercentage,
+                        isAcceptable: isAcceptable
+                    });
+                }
+            });
+            
+            displayResults();
+        }
+
+        function displayResults() {
+            const resultsDiv = document.getElementById('resultsTable');
+            
+            if (samples.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <p data-ar="لا توجد نتائج لعرضها. يرجى إدخال البيانات وحساب النتائج." data-en="No results to display. Please enter data and calculate results.">
+                            لا توجد نتائج لعرضها. يرجى إدخال البيانات وحساب النتائج.
+                        </p>
+                    </div>
+                `;
+                updateLanguage();
+                return;
+            }
+            
+            let tableHTML = `
+                <table class="w-full border-collapse border border-gray-300 dark:border-gray-600">
+                    <thead>
+                        <tr class="bg-primary-500 text-white">
+                            <th class="border border-gray-300 px-3 py-2 text-sm" data-ar="اسم العينة" data-en="Sample Name">اسم العينة</th>
+                            <th class="border border-gray-300 px-3 py-2 text-sm" data-ar="وزن العينة قبل (جرام)" data-en="Weight Before (g)">وزن العينة قبل (جرام)</th>
+                            <th class="border border-gray-300 px-3 py-2 text-sm" data-ar="وزن الفلتر قبل (جرام)" data-en="Filter Before (g)">وزن الفلتر قبل (جرام)</th>
+                            <th class="border border-gray-300 px-3 py-2 text-sm" data-ar="وزن العينة بعد (جرام)" data-en="Weight After (g)">وزن العينة بعد (جرام)</th>
+                            <th class="border border-gray-300 px-3 py-2 text-sm" data-ar="وزن الفلتر بعد (جرام)" data-en="Filter After (g)">وزن الفلتر بعد (جرام)</th>
+                            <th class="border border-gray-300 px-3 py-2 text-sm" data-ar="وزن التربة الناعمة (جرام)" data-en="Fine Soil Weight (g)">وزن التربة الناعمة (جرام)</th>
+                            <th class="border border-gray-300 px-3 py-2 text-sm" data-ar="وزن العينة للركام (جرام)" data-en="Aggregate Weight (g)">وزن العينة للركام (جرام)</th>
+                            <th class="border border-gray-300 px-3 py-2 text-sm" data-ar="وزن البيتومين (جرام)" data-en="Bitumen Weight (g)">وزن البيتومين (جرام)</th>
+                            <th class="border border-gray-300 px-3 py-2 text-sm" data-ar="نسبة البيتومين %" data-en="Bitumen %">نسبة البيتومين %</th>
+                            <th class="border border-gray-300 px-3 py-2 text-sm" data-ar="النتيجة" data-en="Result">النتيجة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            samples.forEach(sample => {
+                const resultText = sample.isAcceptable ? 
+                    (currentLang === 'ar' ? 'مقبول' : 'Pass') : 
+                    (currentLang === 'ar' ? 'مرفوض' : 'Fail');
+                const resultClass = sample.isAcceptable ? 'text-green-600' : 'text-red-600';
+                
+                tableHTML += `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="border border-gray-300 px-3 py-2 text-sm">${sample.name}</td>
+                        <td class="border border-gray-300 px-3 py-2 text-sm text-green-600 font-medium">${sample.weightBefore.toFixed(2)}</td>
+                        <td class="border border-gray-300 px-3 py-2 text-sm text-green-600 font-medium">${sample.filterBefore.toFixed(2)}</td>
+                        <td class="border border-gray-300 px-3 py-2 text-sm text-green-600 font-medium">${sample.weightAfter.toFixed(2)}</td>
+                        <td class="border border-gray-300 px-3 py-2 text-sm text-green-600 font-medium">${sample.filterAfter.toFixed(2)}</td>
+                        <td class="border border-gray-300 px-3 py-2 text-sm text-green-600 font-medium">${sample.fineSoilWeight.toFixed(2)}</td>
+                        <td class="border border-gray-300 px-3 py-2 text-sm text-green-600 font-medium">${sample.aggregateWeight.toFixed(2)}</td>
+                        <td class="border border-gray-300 px-3 py-2 text-sm text-green-600 font-medium">${sample.bitumenWeight.toFixed(2)}</td>
+                        <td class="border border-gray-300 px-3 py-2 text-sm text-green-600 font-semibold">${sample.bitumenPercentage.toFixed(2)}%</td>
+                        <td class="border border-gray-300 px-3 py-2 text-sm font-semibold ${resultClass}">${resultText}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            resultsDiv.innerHTML = tableHTML;
+            updateLanguage();
+        }
+
+        // Export functions
+        function exportToExcel() {
+            if (samples.length === 0) {
+                showAlert(currentLang === 'ar' ? 'لا توجد بيانات للتصدير' : 'No data to export');
+                return;
+            }
+
+            const projectInfo = {
+                'Project Name / اسم المشروع': document.getElementById('projectName').value,
+                'Contractor Name / اسم المقاول': document.getElementById('contractorName').value,
+                'Layer Type / نوع الطبقة': document.getElementById('layerType').value,
+                'Test Date / تاريخ الاختبار': document.getElementById('testDate').value,
+                'Min Bitumen % / الحد الأدنى للبيتومين': document.getElementById('minBitumen').value,
+                'Max Bitumen % / الحد الأعلى للبيتومين': document.getElementById('maxBitumen').value
+            };
+
+            const workbook = XLSX.utils.book_new();
+            
+            // Project info sheet
+            const projectSheet = XLSX.utils.json_to_sheet([projectInfo]);
+            XLSX.utils.book_append_sheet(workbook, projectSheet, 'Project Info');
+            
+            // Results sheet
+            const resultsData = samples.map(sample => ({
+                'Sample Name / اسم العينة': sample.name,
+                'Weight Before (g) / وزن العينة قبل': sample.weightBefore,
+                'Filter Before (g) / وزن الفلتر قبل': sample.filterBefore,
+                'Weight After (g) / وزن العينة بعد': sample.weightAfter,
+                'Filter After (g) / وزن الفلتر بعد': sample.filterAfter,
+                'Fine Soil Weight (g) / وزن التربة الناعمة': sample.fineSoilWeight,
+                'Aggregate Weight (g) / وزن العينة للركام': sample.aggregateWeight,
+                'Bitumen Weight (g) / وزن البيتومين': sample.bitumenWeight,
+                'Bitumen % / نسبة البيتومين': sample.bitumenPercentage.toFixed(2),
+                'Result / النتيجة': sample.isAcceptable ? 'Pass / مقبول' : 'Fail / مرفوض'
+            }));
+            
+            const resultsSheet = XLSX.utils.json_to_sheet(resultsData);
+            XLSX.utils.book_append_sheet(workbook, resultsSheet, 'Test Results');
+            
+            XLSX.writeFile(workbook, 'Bitumen_Extraction_Test_Results.xlsx');
+        }
+
+        function exportToPDF() {
+            if (samples.length === 0) {
+                showAlert(currentLang === 'ar' ? 'لا توجد بيانات للتصدير' : 'No data to export');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+            
+            // Header
+            doc.setFontSize(20);
+            doc.text('BITUMEN EXTRACTION TEST RESULTS', 20, 20);
+            
+            // Project information
+            doc.setFontSize(12);
+            let yPos = 40;
+            doc.text(`Project Name: ${document.getElementById('projectName').value}`, 20, yPos);
+            yPos += 8;
+            doc.text(`Contractor: ${document.getElementById('contractorName').value}`, 20, yPos);
+            yPos += 8;
+            doc.text(`Layer Type: ${document.getElementById('layerType').value}`, 20, yPos);
+            yPos += 8;
+            doc.text(`Test Date: ${document.getElementById('testDate').value}`, 20, yPos);
+            yPos += 8;
+            doc.text(`Bitumen Range: ${document.getElementById('minBitumen').value}% - ${document.getElementById('maxBitumen').value}%`, 20, yPos);
+            
+            // Results table
+            const tableData = samples.map(sample => [
+                sample.name,
+                sample.weightBefore.toFixed(2),
+                sample.filterBefore.toFixed(2),
+                sample.weightAfter.toFixed(2),
+                sample.filterAfter.toFixed(2),
+                sample.fineSoilWeight.toFixed(2),
+                sample.aggregateWeight.toFixed(2),
+                sample.bitumenWeight.toFixed(2),
+                sample.bitumenPercentage.toFixed(2) + '%',
+                sample.isAcceptable ? 'Pass' : 'Fail'
+            ]);
+            
+            doc.autoTable({
+                startY: yPos + 15,
+                head: [['Sample Name', 'Weight Before (g)', 'Filter Before (g)', 'Weight After (g)', 'Filter After (g)', 'Fine Soil (g)', 'Aggregate Weight (g)', 'Bitumen Weight (g)', 'Bitumen %', 'Result']],
+                body: tableData,
+                theme: 'grid',
+                styles: { fontSize: 8, cellPadding: 2 },
+                headStyles: { fillColor: [0, 104, 94] },
+                columnStyles: {
+                    8: { textColor: [0, 0, 0] }
+                },
+                didParseCell: function(data) {
+                    if (data.column.index === 8 && data.section === 'body') {
+                        if (data.cell.text[0] === 'Fail') {
+                            data.cell.styles.textColor = [161, 53, 37];
+                        } else {
+                            data.cell.styles.textColor = [0, 163, 153];
+                        }
+                    }
+                }
+            });
+            
+            doc.save('Bitumen_Extraction_Test_Results.pdf');
+        }
+
+        function printResults() {
+            if (samples.length === 0) {
+                showAlert(currentLang === 'ar' ? 'لا توجد بيانات للطباعة' : 'No data to print');
+                return;
+            }
+
+            const printContent = document.getElementById('printContent');
+            
+            printContent.innerHTML = `
+                <div style="padding: 20px; font-family: Arial, sans-serif;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h1 style="color: #00685E; font-size: 24px; margin-bottom: 10px;">BITUMEN EXTRACTION TEST RESULTS</h1>
+                        <div style="background: linear-gradient(135deg, #00685E 0%, #8BAA99 100%); height: 4px; width: 100%; margin: 10px 0;"></div>
+                    </div>
+                    
+                    <div style="margin-bottom: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <h3 style="color: #00685E; margin-bottom: 10px;">Project Information</h3>
+                            <p><strong>Project Name:</strong> ${document.getElementById('projectName').value}</p>
+                            <p><strong>Contractor:</strong> ${document.getElementById('contractorName').value}</p>
+                            <p><strong>Layer Type:</strong> ${document.getElementById('layerType').value}</p>
+                        </div>
+                        <div>
+                            <h3 style="color: #00685E; margin-bottom: 10px;">Test Details</h3>
+                            <p><strong>Test Date:</strong> ${document.getElementById('testDate').value}</p>
+                            <p><strong>Bitumen Range:</strong> ${document.getElementById('minBitumen').value}% - ${document.getElementById('maxBitumen').value}%</p>
+                        </div>
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 10px;">
+                        <thead>
+                            <tr style="background-color: #00685E; color: white;">
+                                <th style="border: 1px solid #ddd; padding: 8px;">Sample Name</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Weight Before (g)</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Filter Before (g)</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Weight After (g)</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Filter After (g)</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Fine Soil (g)</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Aggregate Weight (g)</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Bitumen Weight (g)</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Bitumen %</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${samples.map(sample => `
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 6px;">${sample.name}</td>
+                                    <td style="border: 1px solid #ddd; padding: 6px;">${sample.weightBefore.toFixed(2)}</td>
+                                    <td style="border: 1px solid #ddd; padding: 6px;">${sample.filterBefore.toFixed(2)}</td>
+                                    <td style="border: 1px solid #ddd; padding: 6px;">${sample.weightAfter.toFixed(2)}</td>
+                                    <td style="border: 1px solid #ddd; padding: 6px;">${sample.filterAfter.toFixed(2)}</td>
+                                    <td style="border: 1px solid #ddd; padding: 6px;">${sample.fineSoilWeight.toFixed(2)}</td>
+                                    <td style="border: 1px solid #ddd; padding: 6px;">${sample.aggregateWeight.toFixed(2)}</td>
+                                    <td style="border: 1px solid #ddd; padding: 6px;">${sample.bitumenWeight.toFixed(2)}</td>
+                                    <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold;">${sample.bitumenPercentage.toFixed(2)}%</td>
+                                    <td style="border: 1px solid #ddd; padding: 6px; font-weight: bold; color: ${sample.isAcceptable ? '#00A399' : '#A13525'};">${sample.isAcceptable ? 'Pass' : 'Fail'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            window.print();
+        }
+
+        // Utility functions
+        function showAlert(message) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
+                    <p class="text-gray-700 dark:text-gray-300 mb-4">${message}</p>
+                    <div class="flex justify-end">
+                        <button class="px-4 py-2 bg-primary-500 text-white hover:bg-primary-600 rounded" onclick="this.closest('.fixed').remove()">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function showConfirmDialog(message, onConfirm) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
+                    <p class="text-gray-700 dark:text-gray-300 mb-4">${message}</p>
+                    <div class="flex justify-end space-x-3">
+                        <button class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded" onclick="this.closest('.fixed').remove()">
+                            <span data-ar="إلغاء" data-en="Cancel">${currentLang === 'ar' ? 'إلغاء' : 'Cancel'}</span>
+                        </button>
+                        <button class="px-4 py-2 bg-accent-red text-white hover:bg-red-600 rounded" onclick="this.closest('.fixed').remove(); onConfirm()">
+                            <span data-ar="تأكيد" data-en="Confirm">${currentLang === 'ar' ? 'تأكيد' : 'Confirm'}</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Event listeners
+        document.getElementById('addSample').addEventListener('click', addSample);
+        document.getElementById('clearAll').addEventListener('click', clearAllSamples);
+        document.getElementById('calculateAll').addEventListener('click', calculateResults);
+        document.getElementById('printResults').addEventListener('click', printResults);
+        document.getElementById('exportExcel').addEventListener('click', exportToExcel);
+        document.getElementById('exportPDF').addEventListener('click', exportToPDF);
+    </script>
+</body>
+</html>
